@@ -54,16 +54,16 @@ def login(request):
             messages.warning(request, 'Username or password you entered is incorrect.')
     return redirect('/')
 def add(request):
-    if len(request.POST['task']) <=0:
-        messages.warning(request, "Task cannot be blank")
-    if request.POST['date'] < strftime("%Y-%m-%d", gmtime()):
-        messages.warning(request, "Please choose today or future date")
-    if len(request.POST['time']) <=0:
-        messages.warning(request, "Please choose appointment time.")
-    else:
-        user = User.objects.get(id=request.session['id']) 
-        Appointment.objects.create(user=user,task=request.POST['task'],date=request.POST['date'],time=request.POST['time'],status=request.POST['status'])
-    return redirect('/user')
+    if request.method == 'POST':
+        errors = User.objects.add(request.POST)
+        if len(errors):
+            for tag, error in errors.iteritems():
+                messages.error(request, error, extra_tags=tag)
+            return redirect('/')
+        else:
+            user = User.objects.get(id=request.session['id']) 
+            Appointment.objects.create(user=user,task=request.POST['task'],date=request.POST['date'],time=request.POST['time'],status=request.POST['status'])
+    return redirect('/')
 def edit(request,id):
     context = { "appointment" : Appointment.objects.get(id=id),
                 "date" : strftime("%Y-%m-%d", gmtime()),
@@ -71,20 +71,20 @@ def edit(request,id):
     }
     return render(request, "appointment/edit.html", context)
 def update(request,id):
-    if len(request.POST['task']) <=0:
-        messages.warning(request, "Task cannot be blank.")
-    if request.POST['date'] < strftime("%Y-%m-%d", gmtime()):
-        messages.warning(request, "Please choose today or future date.")
-    if len(request.POST['time']) <=0:
-        messages.warning(request, "Please choose appointment time.")
-    else:
-        edit_appointment = Appointment.objects.get(id=id)
-        edit_appointment.task = request.POST['task']
-        edit_appointment.status = request.POST['status']
-        edit_appointment.date = request.POST['date']
-        edit_appointment.time = request.POST['time']
-        edit_appointment.save()
-    return redirect('/edit/'+id)
+    if request.method == 'POST':
+        errors = User.objects.update(request.POST)
+        if len(errors):
+            for tag, error in errors.iteritems():
+                messages.error(request, error, extra_tags=tag)
+            return redirect('/edit/'+id)
+        else:
+            edit_appointment = Appointment.objects.get(id=id)
+            edit_appointment.task = request.POST['task']
+            edit_appointment.status = request.POST['status']
+            edit_appointment.date = request.POST['date']
+            edit_appointment.time = request.POST['time']
+            edit_appointment.save()
+    return redirect('/user')
 def logout(request):
     del request.session['id']
     return redirect('/')

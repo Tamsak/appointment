@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from django.db import models
 from django.core.validators import validate_email
+from time import gmtime, strftime
 
 class UserManager(models.Manager):
     def regis_validator(self, postData):
@@ -18,6 +19,25 @@ class UserManager(models.Manager):
         except:
             errors["email"] = "Email is not valid"
         return errors
+    def add(self, postData):
+        errors = {}
+        if len(postData['task']) <=0:
+            errors['task'] = "Task cannot be blank"
+        if postData['date'] < strftime("%Y-%m-%d", gmtime()):
+            errors['date'] = "Please choose today or future date"
+        if len(postData['time']) <=0:
+            errors['date'] = "Please choose appointment time."
+        return errors
+    def update(self,postData):
+        errors={}
+        if len(postData['task']) <=0:
+            errors['task'] = "Task cannot be blank."
+        if postData['date'] < strftime("%Y-%m-%d", gmtime()):
+            errors['date'] = "Please choose today or future date."
+        if len(postData['time']) <=0:
+            errors['time'] = "Please choose appointment time."
+        return errors
+
 class User(models.Model):
     name = models.CharField(max_length = 255)
     email = models.CharField(max_length = 255)
